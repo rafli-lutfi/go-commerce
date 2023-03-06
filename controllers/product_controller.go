@@ -12,6 +12,7 @@ import (
 type ProductHandler interface {
 	NewProduct(c *gin.Context)
 	GetProductByID(c *gin.Context)
+	GetAllProductByCategory(c *gin.Context)
 	UpdateProduct(c *gin.Context)
 	DeleteProduct(c *gin.Context)
 }
@@ -97,6 +98,35 @@ func (ph *productHandler) GetProductByID(c *gin.Context) {
 	})
 }
 
+func (ph *productHandler) GetAllProductByCategory(c *gin.Context) {
+	var ctx = c.Request.Context()
+	var categoryName = c.Query("name")
+
+	if categoryName == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  http.StatusBadRequest,
+			"message": "query param is empty",
+			"data":    nil,
+		})
+	}
+
+	products, err := ph.productService.GetAllProductByCategories(ctx, categoryName)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  http.StatusInternalServerError,
+			"message": err.Error(),
+			"data":    nil,
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  http.StatusOK,
+		"message": "success get all products",
+		"data":    products,
+	})
+}
+
 func (ph *productHandler) UpdateProduct(c *gin.Context) {
 	var ctx = c.Request.Context()
 	var product = models.Product{}
@@ -130,7 +160,16 @@ func (ph *productHandler) UpdateProduct(c *gin.Context) {
 
 func (ph *productHandler) DeleteProduct(c *gin.Context) {
 	var ctx = c.Request.Context()
-	var id = c.Param("id")
+	var id = c.Query("id")
+
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  http.StatusBadRequest,
+			"message": "query param is empty",
+			"data":    nil,
+		})
+		return
+	}
 
 	productID, err := strconv.Atoi(id)
 	if err != nil {

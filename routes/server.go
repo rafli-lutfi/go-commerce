@@ -34,9 +34,12 @@ func RunServer(db *gorm.DB, r *gin.Engine) {
 	products.GET("/:id", apiHandler.productHandler.GetProductByID)
 	products.POST("/create", apiHandler.productHandler.NewProduct)
 	products.PUT("/update", apiHandler.productHandler.UpdateProduct)
-	products.DELETE("/:id", apiHandler.productHandler.DeleteProduct)
+	products.DELETE("/delete", apiHandler.productHandler.DeleteProduct) //query id
 
 	categories := api.Group("/category")
 	categories.GET("/:id", apiHandler.categoryHandler.GetCategoryByID)
+	categories.GET("", apiHandler.productHandler.GetAllProductByCategory) //query name
 	categories.POST("/create", apiHandler.categoryHandler.CreateCategory)
+	categories.PUT("/update", apiHandler.categoryHandler.UpdateCategory)
+	categories.DELETE("/delete", apiHandler.categoryHandler.DeleteCategory) //query id
 }

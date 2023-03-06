@@ -12,6 +12,8 @@ import (
 type CategoryHandler interface {
 	CreateCategory(c *gin.Context)
 	GetCategoryByID(c *gin.Context)
+	UpdateCategory(c *gin.Context)
+	DeleteCategory(c *gin.Context)
 }
 
 type categoryHandler struct {
@@ -91,5 +93,85 @@ func (ch *categoryHandler) GetCategoryByID(c *gin.Context) {
 		"status":  http.StatusOK,
 		"message": "success get category",
 		"data":    category,
+	})
+}
+
+func (ch *categoryHandler) UpdateCategory(c *gin.Context) {
+	var ctx = c.Request.Context()
+	var category = models.Category{}
+
+	err := c.ShouldBindJSON(&category)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  http.StatusBadRequest,
+			"message": err.Error(),
+			"data":    nil,
+		})
+		return
+	}
+
+	if category.ID == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  http.StatusBadRequest,
+			"message": "id category is empty",
+			"data":    nil,
+		})
+		return
+	}
+
+	err = ch.categoryService.UpdateCategory(ctx, &category)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  http.StatusInternalServerError,
+			"message": err.Error(),
+			"data":    nil,
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  http.StatusOK,
+		"message": "success update category",
+		"data":    "",
+	})
+}
+
+func (ch *categoryHandler) DeleteCategory(c *gin.Context) {
+	var ctx = c.Request.Context()
+	var id = c.Query("id")
+
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  http.StatusBadRequest,
+			"message": "query param is empty",
+			"data":    nil,
+		})
+		return
+	}
+
+	categoryID, err := strconv.Atoi(id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  http.StatusBadRequest,
+			"message": "invalid id type",
+			"data":    nil,
+		})
+		return
+	}
+
+	err = ch.categoryService.DeleteCategory(ctx, categoryID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  http.StatusInternalServerError,
+			"message": err.Error(),
+			"data":    nil,
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  http.StatusOK,
+		"message": "success delete category",
+		"data":    "",
 	})
 }

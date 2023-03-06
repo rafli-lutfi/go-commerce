@@ -10,9 +10,10 @@ import (
 
 type CategoryRepository interface {
 	GetCategoryByID(ctx context.Context, id int) (models.Category, error)
+	GetCategoryByName(ctx context.Context, categoryName string) (models.Category, error)
 	GetAllCategories(ctx context.Context) ([]models.Category, error)
 	CreateNewCategory(ctx context.Context, category models.Category) (int, error)
-	UpdateCategory(ctx context.Context, category models.Category) error
+	UpdateCategory(ctx context.Context, category *models.Category) error
 	DeleteCategory(ctx context.Context, id int) error
 }
 
@@ -27,14 +28,28 @@ func NewCategoryRepository(db *gorm.DB) *categoryRepository {
 func (cr *categoryRepository) GetCategoryByID(ctx context.Context, id int) (models.Category, error) {
 	var category = models.Category{}
 
-	err := cr.db.WithContext(ctx).Where("id = ?", id).Find(&category).Error
+	err := cr.db.WithContext(ctx).Where("id = ?", id).First(&category).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return models.Category{}, err
+		return models.Category{}, nil
 	} else if err != nil {
 		return models.Category{}, err
 	}
 
 	return category, nil
+}
+
+func (cr *categoryRepository) GetCategoryByName(ctx context.Context, categoryName string) (models.Category, error) {
+	var category = models.Category{}
+
+	err := cr.db.WithContext(ctx).Where("name = ?", categoryName).First(&category).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return models.Category{}, nil
+	} else if err != nil {
+		return models.Category{}, err
+	}
+
+	return category, nil
+
 }
 
 func (cr *categoryRepository) GetAllCategories(ctx context.Context) ([]models.Category, error) {
@@ -69,8 +84,8 @@ func (cr *categoryRepository) CreateNewCategory(ctx context.Context, category mo
 	return int(category.ID), nil
 }
 
-func (cr *categoryRepository) UpdateCategory(ctx context.Context, category models.Category) error {
-	err := cr.db.WithContext(ctx).Model(&models.Category{}).Updates(category).Error
+func (cr *categoryRepository) UpdateCategory(ctx context.Context, category *models.Category) error {
+	err := cr.db.WithContext(ctx).Model(&models.Category{}).Where("id = ?", category.ID).Updates(category).Error
 	if err != nil {
 		return err
 	}

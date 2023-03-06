@@ -68,7 +68,7 @@ func (pr *productRepository) DeleteProduct(ctx context.Context, id int) error {
 func (pr *productRepository) GetAllProductByCategories(ctx context.Context, idCategory int) ([]models.Product, error) {
 	productsByCategory := []models.Product{}
 
-	rows, err := pr.db.WithContext(ctx).Where("id_category = ?", idCategory).Find(&models.Category{}).Rows()
+	rows, err := pr.db.WithContext(ctx).Model(&models.Product{}).Where("category_id = ?", idCategory).Rows()
 	if err != nil {
 		return []models.Product{}, err
 	}

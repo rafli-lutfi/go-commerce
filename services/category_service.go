@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 
 	"github.com/rafli-lutfi/go-commerce/models"
 	"github.com/rafli-lutfi/go-commerce/repository"
@@ -11,7 +12,7 @@ type CategoryService interface {
 	GetCategoryByID(ctx context.Context, categoryID int) (models.Category, error)
 	GetAllCategories(ctx context.Context) ([]models.Category, error)
 	CreateNewCategory(ctx context.Context, category models.Category) (int, error)
-	UpdateCategory(ctx context.Context, category models.Category) error
+	UpdateCategory(ctx context.Context, category *models.Category) error
 	DeleteCategory(ctx context.Context, categoryID int) error
 }
 
@@ -50,7 +51,7 @@ func (cs *categoryService) CreateNewCategory(ctx context.Context, category model
 	return categoryID, nil
 }
 
-func (cs *categoryService) UpdateCategory(ctx context.Context, category models.Category) error {
+func (cs *categoryService) UpdateCategory(ctx context.Context, category *models.Category) error {
 	err := cs.categoryRepository.UpdateCategory(ctx, category)
 	if err != nil {
 		return err
@@ -60,9 +61,13 @@ func (cs *categoryService) UpdateCategory(ctx context.Context, category models.C
 }
 
 func (cs *categoryService) DeleteCategory(ctx context.Context, categoryID int) error {
-	_, err := cs.categoryRepository.GetCategoryByID(ctx, categoryID)
+	categoryDB, err := cs.categoryRepository.GetCategoryByID(ctx, categoryID)
 	if err != nil {
 		return err
+	}
+
+	if categoryDB.ID == 0 {
+		return errors.New("id category not found")
 	}
 
 	// what happend when data already soft delete ?
