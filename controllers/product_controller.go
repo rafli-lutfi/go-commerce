@@ -25,7 +25,7 @@ func NewProductHandler(productService services.ProductService) *productHandler {
 }
 
 func (ph *productHandler) NewProduct(c *gin.Context) {
-	var product = models.NewProduct{}
+	var product = models.Product{}
 	var ctx = c.Request.Context()
 
 	err := c.ShouldBindJSON(&product)

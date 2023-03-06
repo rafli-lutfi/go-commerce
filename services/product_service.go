@@ -10,7 +10,7 @@ import (
 
 type ProductService interface {
 	GetProductByID(ctx context.Context, id int) (models.Product, error)
-	CreateNewProduct(ctx context.Context, product models.NewProduct) (int, error)
+	CreateNewProduct(ctx context.Context, product models.Product) (int, error)
 	UpdateProduct(ctx context.Context, product *models.Product) error
 	DeleteProduct(ctx context.Context, productID int) error
 	GetAllProductByCategories(ctx context.Context, categoryID int) ([]models.Product, error)
@@ -34,7 +34,7 @@ func (ps *productService) GetProductByID(ctx context.Context, id int) (models.Pr
 	return product, nil
 }
 
-func (ps *productService) CreateNewProduct(ctx context.Context, product models.NewProduct) (int, error) {
+func (ps *productService) CreateNewProduct(ctx context.Context, product models.Product) (int, error) {
 	// Checking Category ID
 	_, err := ps.categoryRepository.GetCategoryByID(ctx, int(product.CategoryID))
 	if err != nil {

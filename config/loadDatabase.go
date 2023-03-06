@@ -50,7 +50,6 @@ func LoadDatabase() {
 
 	db.AutoMigrate(
 		models.Category{},
-		models.Inventory{},
 		models.Discount{},
 		models.Product{},
 	)

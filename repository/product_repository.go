@@ -10,12 +10,10 @@ import (
 
 type ProductRepository interface {
 	GetProductByID(ctx context.Context, id int) (models.Product, error)
-	CreateNewProduct(ctx context.Context, newProduct models.NewProduct) (int, error)
+	CreateNewProduct(ctx context.Context, newProduct models.Product) (int, error)
 	UpdateProduct(ctx context.Context, product *models.Product) error
 	DeleteProduct(ctx context.Context, id int) error
 	GetAllProductByCategories(ctx context.Context, idCategory int) ([]models.Product, error)
-
-	CreateNewInventory(ctx context.Context, quantity int) (int, error)
 }
 
 type productRepository struct {
@@ -39,33 +37,10 @@ func (pr *productRepository) GetProductByID(ctx context.Context, id int) (models
 	return product, nil
 }
 
-func (pr *productRepository) CreateNewProduct(ctx context.Context, newProduct models.NewProduct) (int, error) {
-	product := models.Product{}
-
-	// execute with transaction
-	if txErr := pr.db.Transaction(func(tx *gorm.DB) error {
-		inventory := models.Inventory{Quantity: newProduct.Quantity}
-
-		// Create inventory record
-		if err := tx.Create(&inventory).Error; err != nil {
-			return err
-		}
-
-		product.Name = newProduct.Name
-		product.Desc = newProduct.Desc
-		product.Price = newProduct.Price
-		product.CategoryID = newProduct.CategoryID
-		product.DiscountID = newProduct.CategoryID
-		product.InventoryID = inventory.ID
-
-		// Create product record
-		if err := tx.Create(&product).Error; err != nil {
-			return err
-		}
-
-		return nil
-	}); txErr != nil {
-		return 0, txErr
+func (pr *productRepository) CreateNewProduct(ctx context.Context, product models.Product) (int, error) {
+	// Create product record
+	if err := pr.db.WithContext(ctx).Create(&product).Error; err != nil {
+		return 0, err
 	}
 
 	return int(product.ID), nil
@@ -111,14 +86,4 @@ func (pr *productRepository) GetAllProductByCategories(ctx context.Context, idCa
 	}
 
 	return productsByCategory, nil
-}
-
-func (pr *productRepository) CreateNewInventory(ctx context.Context, quantity int) (int, error) {
-	inventory := models.Inventory{Quantity: quantity}
-	err := pr.db.WithContext(ctx).Create(&inventory).Error
-	if err != nil {
-		return 0, err
-	}
-
-	return int(inventory.ID), nil
 }
