@@ -13,11 +13,13 @@ type Product struct {
 }
 
 type ProductInfo struct {
-	ID         uint    `json:"id"`
-	Name       string  `json:"name"`
-	Desc       string  `json:"desc"`
-	Price      float64 `json:"price"`
-	Quantity   int     `json:"quantity"`
-	CategoryID uint    `json:"category_id"`
-	DiscountID uint    `json:"discount_id"`
+	ID              uint    `json:"id"`
+	Name            string  `json:"name"`
+	Desc            string  `json:"desc"`
+	Price           float64 `json:"price"`
+	Quantity        int     `json:"quantity"`
+	CategoryName    string  `json:"category_name"`
+	DiscountName    string  `json:"discount_name"`
+	DiscountPercent float64 `json:"discount_percent"`
+	Active          bool    `json:"active"`
 }

@@ -81,7 +81,7 @@ func (ph *productHandler) GetProductByID(c *gin.Context) {
 		return
 	}
 
-	product, err := ph.productService.GetProductByID(ctx, productID)
+	product, err := ph.productService.GetProductWithJoinByID(ctx, productID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status":  http.StatusInternalServerError,

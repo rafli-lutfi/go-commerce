@@ -11,21 +11,26 @@ import (
 type APIHandler struct {
 	productHandler  controllers.ProductHandler
 	categoryHandler controllers.CategoryHandler
+	discountHandler controllers.DiscountHandler
 }
 
 func RunServer(db *gorm.DB, r *gin.Engine) {
 	productRepository := repository.NewProductRepository(db)
 	categoryRepository := repository.NewCategoryRepository(db)
+	discountRepository := repository.NewDiscountRepository(db)
 
 	productService := services.NewProductService(productRepository, categoryRepository)
 	categoryService := services.NewCategoryService(categoryRepository)
+	discountService := services.NewDiscountService(discountRepository)
 
 	productHandler := controllers.NewProductHandler(productService)
 	categoryHandler := controllers.NewCategoryHandler(categoryService)
+	discountHandler := controllers.NewDiscountHandler(discountService)
 
 	apiHandler := APIHandler{
 		productHandler:  productHandler,
 		categoryHandler: categoryHandler,
+		discountHandler: discountHandler,
 	}
 
 	api := r.Group("/api")
@@ -42,4 +47,10 @@ func RunServer(db *gorm.DB, r *gin.Engine) {
 	categories.POST("/create", apiHandler.categoryHandler.CreateCategory)
 	categories.PUT("/update", apiHandler.categoryHandler.UpdateCategory)
 	categories.DELETE("/delete", apiHandler.categoryHandler.DeleteCategory) //query id
+
+	discounts := api.Group("/discount")
+	discounts.GET("/:id", apiHandler.discountHandler.GetDiscountByID)       //get discountByID
+	discounts.POST("/create", apiHandler.discountHandler.CreateNewDiscount) //Create New Discount
+	discounts.PUT("/update", apiHandler.discountHandler.UpdateDiscount)     //Update exist discount
+	discounts.DELETE("/delete", apiHandler.discountHandler.DeleteDiscount)  // Delete Discount with query id
 }
