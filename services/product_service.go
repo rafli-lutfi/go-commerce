@@ -9,11 +9,11 @@ import (
 )
 
 type ProductService interface {
-	GetProductByID(ctx context.Context, id int) (models.Product, error)
+	GetProductWithJoinByID(ctx context.Context, id int) (models.ProductInfo, error)
 	CreateNewProduct(ctx context.Context, product models.Product) (int, error)
 	UpdateProduct(ctx context.Context, product *models.Product) error
 	DeleteProduct(ctx context.Context, productID int) error
-	GetAllProductByCategories(ctx context.Context, categoryName string) ([]models.Product, error)
+	GetAllProductByCategories(ctx context.Context, categoryName string) ([]models.ProductInfo, error)
 }
 
 type productService struct {
@@ -25,10 +25,18 @@ func NewProductService(productRepository repository.ProductRepository, categoryR
 	return &productService{productRepository, categoryRepository}
 }
 
-func (ps *productService) GetProductByID(ctx context.Context, id int) (models.Product, error) {
-	product, err := ps.productRepository.GetProductByID(ctx, id)
+func (ps *productService) GetProductWithJoinByID(ctx context.Context, id int) (models.ProductInfo, error) {
+	productDB, err := ps.productRepository.GetProductByID(ctx, id)
 	if err != nil {
-		return models.Product{}, err
+		return models.ProductInfo{}, err
+	}
+	if productDB.ID == 0 {
+		return models.ProductInfo{}, errors.New("product not found")
+	}
+
+	product, err := ps.productRepository.JoinTableProduct(ctx, int(productDB.ID))
+	if err != nil {
+		return models.ProductInfo{}, err
 	}
 
 	return product, nil
@@ -90,21 +98,21 @@ func (ps *productService) DeleteProduct(ctx context.Context, productID int) erro
 	return nil
 }
 
-func (ps *productService) GetAllProductByCategories(ctx context.Context, categoryName string) ([]models.Product, error) {
+func (ps *productService) GetAllProductByCategories(ctx context.Context, categoryName string) ([]models.ProductInfo, error) {
 	// Checking Category Name
 	category, err := ps.categoryRepository.GetCategoryByName(ctx, categoryName)
 	if err != nil {
-		return []models.Product{}, err
+		return []models.ProductInfo{}, err
 	}
 
 	if category.ID == 0 {
-		return []models.Product{}, errors.New("category name not found")
+		return []models.ProductInfo{}, errors.New("category name not found")
 	}
 
 	// Find Products By Category
 	products, err := ps.productRepository.GetAllProductByCategories(ctx, int(category.ID))
 	if err != nil {
-		return []models.Product{}, err
+		return []models.ProductInfo{}, err
 	}
 
 	return products, nil

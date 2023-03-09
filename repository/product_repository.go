@@ -13,7 +13,8 @@ type ProductRepository interface {
 	CreateNewProduct(ctx context.Context, newProduct models.Product) (int, error)
 	UpdateProduct(ctx context.Context, product *models.Product) error
 	DeleteProduct(ctx context.Context, id int) error
-	GetAllProductByCategories(ctx context.Context, idCategory int) ([]models.Product, error)
+	GetAllProductByCategories(ctx context.Context, idCategory int) ([]models.ProductInfo, error)
+	JoinTableProduct(ctx context.Context, productID int) (models.ProductInfo, error)
 }
 
 type productRepository struct {
@@ -65,25 +66,47 @@ func (pr *productRepository) DeleteProduct(ctx context.Context, id int) error {
 }
 
 // get all product by categories
-func (pr *productRepository) GetAllProductByCategories(ctx context.Context, idCategory int) ([]models.Product, error) {
-	productsByCategory := []models.Product{}
+func (pr *productRepository) GetAllProductByCategories(ctx context.Context, idCategory int) ([]models.ProductInfo, error) {
+	productsByCategory := []models.ProductInfo{}
 
 	rows, err := pr.db.WithContext(ctx).Model(&models.Product{}).Where("category_id = ?", idCategory).Rows()
 	if err != nil {
-		return []models.Product{}, err
+		return []models.ProductInfo{}, err
 	}
 	defer rows.Close()
 
 	for rows.Next() {
-		product := models.Product{}
+		product := models.ProductInfo{}
 
 		err := pr.db.WithContext(ctx).ScanRows(rows, &product)
 		if err != nil {
-			return []models.Product{}, err
+			return []models.ProductInfo{}, err
 		}
 
-		productsByCategory = append(productsByCategory, product)
+		productInfo, err := pr.JoinTableProduct(ctx, int(product.ID))
+		if err != nil {
+			return []models.ProductInfo{}, err
+		}
+
+		productsByCategory = append(productsByCategory, productInfo)
 	}
 
 	return productsByCategory, nil
+}
+
+// join table product
+func (pr *productRepository) JoinTableProduct(ctx context.Context, productID int) (models.ProductInfo, error) {
+	result := models.ProductInfo{}
+
+	scope := "products.id, products.name, products.desc, products.price, products.quantity, categories.name AS category_name, discounts.name as discount_name, discounts.discount_percent, discounts.active"
+
+	categoryJoin := "LEFT JOIN categories on categories.id = products.category_id"
+	discountJoin := "LEFT JOIN discounts ON discounts.id = products.discount_id"
+
+	err := pr.db.WithContext(ctx).Model(&models.Product{}).Where("products.id = ?", productID).Select(scope).Joins(categoryJoin).Joins(discountJoin).Find(&result).Error
+	if err != nil {
+		return models.ProductInfo{}, err
+	}
+
+	return result, nil
 }
