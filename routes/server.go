@@ -12,25 +12,30 @@ type APIHandler struct {
 	productHandler  controllers.ProductHandler
 	categoryHandler controllers.CategoryHandler
 	discountHandler controllers.DiscountHandler
+	userHandler     controllers.UserHandler
 }
 
 func RunServer(db *gorm.DB, r *gin.Engine) {
 	productRepository := repository.NewProductRepository(db)
 	categoryRepository := repository.NewCategoryRepository(db)
 	discountRepository := repository.NewDiscountRepository(db)
+	userRepository := repository.NewUserRepository(db)
 
 	productService := services.NewProductService(productRepository, categoryRepository)
 	categoryService := services.NewCategoryService(categoryRepository)
 	discountService := services.NewDiscountService(discountRepository)
+	userService := services.NewUserService(userRepository)
 
 	productHandler := controllers.NewProductHandler(productService)
 	categoryHandler := controllers.NewCategoryHandler(categoryService)
 	discountHandler := controllers.NewDiscountHandler(discountService)
+	userHandler := controllers.NewUserHandler(userService)
 
 	apiHandler := APIHandler{
 		productHandler:  productHandler,
 		categoryHandler: categoryHandler,
 		discountHandler: discountHandler,
+		userHandler:     userHandler,
 	}
 
 	api := r.Group("/api")
@@ -53,4 +58,12 @@ func RunServer(db *gorm.DB, r *gin.Engine) {
 	discounts.POST("/create", apiHandler.discountHandler.CreateNewDiscount) //Create New Discount
 	discounts.PUT("/update", apiHandler.discountHandler.UpdateDiscount)     //Update exist discount
 	discounts.DELETE("/delete", apiHandler.discountHandler.DeleteDiscount)  // Delete Discount with query id
+
+	users := api.Group("/user")
+	users.GET("/:id", apiHandler.userHandler.GetUserByID)             //Get user by id
+	users.POST("/login")                                              // user login
+	users.POST("/register", apiHandler.userHandler.Register)          // add new user
+	users.POST("/newAddress", apiHandler.userHandler.AddNewAddress)   //update user
+	users.PUT("/update", apiHandler.userHandler.UpdateUser)           //update user
+	users.PUT("/updateAddress", apiHandler.userHandler.UpdateAddress) //update user
 }
