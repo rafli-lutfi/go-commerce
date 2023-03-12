@@ -70,6 +70,7 @@ func (ur *userRepository) JoinTableUser(ctx context.Context, userID int) (models
 
 func (ur *userRepository) CreateNewUser(ctx context.Context, user models.NewUser) (int, error) {
 	newUser := models.User{
+		Email:        user.Email,
 		Username:     user.Username,
 		Password:     user.Password,
 		FirstName:    user.FirstName,

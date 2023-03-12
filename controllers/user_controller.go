@@ -2,19 +2,24 @@ package controllers
 
 import (
 	"net/http"
+	"os"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/rafli-lutfi/go-commerce/models"
 	"github.com/rafli-lutfi/go-commerce/services"
 )
 
 type UserHandler interface {
 	GetUserByID(c *gin.Context)
+	Login(c *gin.Context)
 	Register(c *gin.Context)
 	AddNewAddress(c *gin.Context)
 	UpdateUser(c *gin.Context)
 	UpdateAddress(c *gin.Context)
+	Logout(c *gin.Context)
 }
 
 type userHandler struct {
@@ -23,6 +28,20 @@ type userHandler struct {
 
 func NewUserHandler(userService services.UserService) *userHandler {
 	return &userHandler{userService}
+}
+
+func generateJWT(id int) (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"id":  id,
+		"exp": time.Now().Add(time.Hour * 24).Unix(),
+	})
+
+	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET_KEY")))
+	if err != nil {
+		return "", err
+	}
+
+	return tokenString, nil
 }
 
 func (uh *userHandler) GetUserByID(c *gin.Context) {
@@ -88,6 +107,19 @@ func (uh *userHandler) Login(c *gin.Context) {
 		})
 		return
 	}
+
+	token, err := generateJWT(userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  http.StatusInternalServerError,
+			"message": err.Error(),
+			"data":    nil,
+		})
+		return
+	}
+
+	c.SetSameSite(http.SameSiteLaxMode)
+	c.SetCookie("token", token, 3600*24, "/", "localhost", false, true)
 
 	c.JSON(http.StatusOK, gin.H{
 		"status":  http.StatusOK,
@@ -218,6 +250,25 @@ func (uh *userHandler) UpdateAddress(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"status":  http.StatusOK,
 		"message": "success update address",
+		"data":    "",
+	})
+}
+
+func (uh *userHandler) Logout(c *gin.Context) {
+	_, err := c.Cookie("token")
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"status":  http.StatusUnauthorized,
+			"message": "please login first",
+		})
+		return
+	}
+
+	c.SetCookie("token", "", -1, "/", "localhost", true, true)
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  http.StatusOK,
+		"message": "logout success",
 		"data":    "",
 	})
 }
