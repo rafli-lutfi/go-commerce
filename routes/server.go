@@ -65,7 +65,7 @@ func RunServer(db *gorm.DB, r *gin.Engine) {
 	users.POST("/login", apiHandler.userHandler.Login)       // user login
 	users.POST("/register", apiHandler.userHandler.Register) // add new user
 	users.GET("/logout", apiHandler.userHandler.Logout)
-	users.POST("/newAddress", middleware.Authentication(), apiHandler.userHandler.AddNewAddress)   //update user
-	users.PUT("/update", middleware.Authentication(), apiHandler.userHandler.UpdateUser)           //update user
-	users.PUT("/updateAddress", middleware.Authentication(), apiHandler.userHandler.UpdateAddress) //update user
+	users.POST("/profile/newAddress", middleware.Authentication(), apiHandler.userHandler.AddNewAddress)   //update user
+	users.PUT("/profile/update", middleware.Authentication(), apiHandler.userHandler.UpdateUser)           //update user
+	users.PUT("/profile/updateAddress", middleware.Authentication(), apiHandler.userHandler.UpdateAddress) //update user
 }
