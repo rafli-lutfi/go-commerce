@@ -61,11 +61,17 @@ func RunServer(db *gorm.DB, r *gin.Engine) {
 	discounts.DELETE("/delete", middleware.Authentication(), apiHandler.discountHandler.DeleteDiscount)  // Delete Discount with query id
 
 	users := api.Group("/user")
-	users.GET("/:id", apiHandler.userHandler.GetUserByID)    //Get user by id
-	users.POST("/login", apiHandler.userHandler.Login)       // user login
-	users.POST("/register", apiHandler.userHandler.Register) // add new user
+	users.GET("/:id", middleware.Authentication(), apiHandler.userHandler.GetUserByID) //Get user by id
+	users.POST("/login", apiHandler.userHandler.Login)                                 // user login
+	users.POST("/register", apiHandler.userHandler.Register)                           // add new user
 	users.GET("/logout", apiHandler.userHandler.Logout)
 	users.POST("/profile/newAddress", middleware.Authentication(), apiHandler.userHandler.AddNewAddress)   //update user
 	users.PUT("/profile/update", middleware.Authentication(), apiHandler.userHandler.UpdateUser)           //update user
 	users.PUT("/profile/updateAddress", middleware.Authentication(), apiHandler.userHandler.UpdateAddress) //update user
+
+	orders := api.Group("/order")
+	orders.GET("", middleware.Authentication())         //Get Order
+	orders.POST("/create", middleware.Authentication()) // Create Order
+	orders.PUT("/update", middleware.Authentication())  // Update Order
+	// Delete Order
 }
