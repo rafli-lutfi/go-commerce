@@ -56,12 +56,12 @@ func Authentication() gin.HandlerFunc {
 			c.Set("userID", int(id))
 			c.Next()
 
+		} else {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+				"status":  http.StatusUnauthorized,
+				"message": "Couldn't handle this token",
+			})
+
 		}
-
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-			"status":  http.StatusUnauthorized,
-			"message": "Couldn't handle this token",
-		})
-
 	}
 }
