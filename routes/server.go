@@ -47,38 +47,44 @@ func RunServer(db *gorm.DB, r *gin.Engine) {
 	api := r.Group("/api")
 
 	products := api.Group("/product")
-	products.GET("/:id", middleware.Authentication(), apiHandler.productHandler.GetProductByID)
-	products.POST("/create", middleware.Authentication(), apiHandler.productHandler.NewProduct)
-	products.PUT("/update", middleware.Authentication(), apiHandler.productHandler.UpdateProduct)
-	products.DELETE("/delete", middleware.Authentication(), apiHandler.productHandler.DeleteProduct) //query id
+	products.GET("/:id", apiHandler.productHandler.GetProductByID)
+
+	protectedProduct := products.Group("", middleware.Authentication())
+	protectedProduct.POST("/create", apiHandler.productHandler.NewProduct)
+	protectedProduct.PUT("/update", apiHandler.productHandler.UpdateProduct)
+	protectedProduct.DELETE("/delete", apiHandler.productHandler.DeleteProduct) //query id
 
 	categories := api.Group("/category")
-	categories.GET("/:id", middleware.Authentication(), apiHandler.categoryHandler.GetCategoryByID)
-	categories.GET("", middleware.Authentication(), apiHandler.productHandler.GetAllProductByCategory) //query name
-	categories.POST("/create", middleware.Authentication(), apiHandler.categoryHandler.CreateCategory)
-	categories.PUT("/update", middleware.Authentication(), apiHandler.categoryHandler.UpdateCategory)
-	categories.DELETE("/delete", middleware.Authentication(), apiHandler.categoryHandler.DeleteCategory) //query id
+	categories.GET("", apiHandler.productHandler.GetAllProductByCategory) //query name
 
-	discounts := api.Group("/discount")
-	discounts.GET("/:id", middleware.Authentication(), apiHandler.discountHandler.GetDiscountByID)       //get discountByID
-	discounts.POST("/create", middleware.Authentication(), apiHandler.discountHandler.CreateNewDiscount) //Create New Discount
-	discounts.PUT("/update", middleware.Authentication(), apiHandler.discountHandler.UpdateDiscount)     //Update exist discount
-	discounts.DELETE("/delete", middleware.Authentication(), apiHandler.discountHandler.DeleteDiscount)  // Delete Discount with query id
+	protectedCategory := categories.Group("", middleware.Authentication())
+	protectedCategory.GET("/:id", apiHandler.categoryHandler.GetCategoryByID)
+	protectedCategory.POST("/create", apiHandler.categoryHandler.CreateCategory)
+	protectedCategory.PUT("/update", apiHandler.categoryHandler.UpdateCategory)
+	protectedCategory.DELETE("/delete", apiHandler.categoryHandler.DeleteCategory) //query id
+
+	discounts := api.Group("/discount", middleware.Authentication())
+	discounts.GET("/:id", apiHandler.discountHandler.GetDiscountByID)       //get discountByID
+	discounts.POST("/create", apiHandler.discountHandler.CreateNewDiscount) //Create New Discount
+	discounts.PUT("/update", apiHandler.discountHandler.UpdateDiscount)     //Update exist discount
+	discounts.DELETE("/delete", apiHandler.discountHandler.DeleteDiscount)  // Delete Discount with query id
 
 	users := api.Group("/user")
-	users.GET("/:id", middleware.Authentication(), apiHandler.userHandler.GetUserByID) //Get user by id
-	users.POST("/login", apiHandler.userHandler.Login)                                 // user login
-	users.POST("/register", apiHandler.userHandler.Register)                           // add new user
-	users.GET("/logout", apiHandler.userHandler.Logout)
-	users.POST("/profile/newAddress", middleware.Authentication(), apiHandler.userHandler.AddNewAddress)   //update user
-	users.PUT("/profile/update", middleware.Authentication(), apiHandler.userHandler.UpdateUser)           //update user
-	users.PUT("/profile/updateAddress", middleware.Authentication(), apiHandler.userHandler.UpdateAddress) //update user
+	users.POST("/login", apiHandler.userHandler.Login)       // user login
+	users.POST("/register", apiHandler.userHandler.Register) // add new user
 
-	orders := api.Group("/order")
-	orders.GET("/myOrder/:id", middleware.Authentication(), apiHandler.orderHandler.GetOrderByID)
-	orders.GET("/myOrder/item/:id", middleware.Authentication(), apiHandler.orderHandler.GetOrderItemByID)
-	orders.GET("/myOrder/history", middleware.Authentication())
-	orders.POST("/product", middleware.Authentication(), apiHandler.orderHandler.AddOrderItem)
-	orders.POST("/payment", middleware.Authentication()) //add payment
-	orders.PUT("/update", middleware.Authentication())   // Update Order
+	protectedUser := users.Group("", middleware.Authentication())
+	protectedUser.GET("/:id", apiHandler.userHandler.GetUserByID) //Get user by id
+	protectedUser.GET("/logout", apiHandler.userHandler.Logout)
+	protectedUser.POST("/profile/newAddress", apiHandler.userHandler.AddNewAddress)   //update user
+	protectedUser.PUT("/profile/update", apiHandler.userHandler.UpdateUser)           //update user
+	protectedUser.PUT("/profile/updateAddress", apiHandler.userHandler.UpdateAddress) //update user
+
+	orders := api.Group("/order", middleware.Authentication())
+	orders.GET("/myOrder/:id", apiHandler.orderHandler.GetOrderByID)
+	orders.GET("/myOrder/item/:id", apiHandler.orderHandler.GetOrderItemByID)
+	orders.GET("/myOrder/history")
+	orders.POST("/product", apiHandler.orderHandler.AddOrderItem)
+	orders.POST("/payment") //add payment
+	orders.PUT("/update")   // Update Order
 }
