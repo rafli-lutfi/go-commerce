@@ -14,6 +14,7 @@ type APIHandler struct {
 	categoryHandler controllers.CategoryHandler
 	discountHandler controllers.DiscountHandler
 	userHandler     controllers.UserHandler
+	orderHandler    controllers.OrderHandler
 }
 
 func RunServer(db *gorm.DB, r *gin.Engine) {
@@ -21,22 +22,26 @@ func RunServer(db *gorm.DB, r *gin.Engine) {
 	categoryRepository := repository.NewCategoryRepository(db)
 	discountRepository := repository.NewDiscountRepository(db)
 	userRepository := repository.NewUserRepository(db)
+	orderRepository := repository.NewOrderRepository(db)
 
 	productService := services.NewProductService(productRepository, categoryRepository)
 	categoryService := services.NewCategoryService(categoryRepository)
 	discountService := services.NewDiscountService(discountRepository)
 	userService := services.NewUserService(userRepository)
+	orderService := services.NewOrderService(orderRepository)
 
 	productHandler := controllers.NewProductHandler(productService)
 	categoryHandler := controllers.NewCategoryHandler(categoryService)
 	discountHandler := controllers.NewDiscountHandler(discountService)
 	userHandler := controllers.NewUserHandler(userService)
+	orderHandler := controllers.NewOrderHandler(orderService)
 
 	apiHandler := APIHandler{
 		productHandler:  productHandler,
 		categoryHandler: categoryHandler,
 		discountHandler: discountHandler,
 		userHandler:     userHandler,
+		orderHandler:    orderHandler,
 	}
 
 	api := r.Group("/api")
@@ -70,8 +75,10 @@ func RunServer(db *gorm.DB, r *gin.Engine) {
 	users.PUT("/profile/updateAddress", middleware.Authentication(), apiHandler.userHandler.UpdateAddress) //update user
 
 	orders := api.Group("/order")
-	orders.GET("", middleware.Authentication())         //Get Order
-	orders.POST("/create", middleware.Authentication()) // Create Order
-	orders.PUT("/update", middleware.Authentication())  // Update Order
-	// Delete Order
+	orders.GET("/myOrder/:id", middleware.Authentication(), apiHandler.orderHandler.GetOrderByID)
+	orders.GET("/myOrder/item/:id", middleware.Authentication(), apiHandler.orderHandler.GetOrderItemByID)
+	orders.GET("/myOrder/history", middleware.Authentication())
+	orders.POST("/product", middleware.Authentication(), apiHandler.orderHandler.AddOrderItem)
+	orders.POST("/payment", middleware.Authentication()) //add payment
+	orders.PUT("/update", middleware.Authentication())   // Update Order
 }

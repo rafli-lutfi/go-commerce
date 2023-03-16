@@ -54,6 +54,9 @@ func LoadDatabase() {
 		models.Product{},
 		models.User{},
 		models.UserAddress{},
+		models.Payment{},
+		models.Order{},
+		models.OrderItem{},
 	)
 
 	fmt.Println("success connect to database ...")
