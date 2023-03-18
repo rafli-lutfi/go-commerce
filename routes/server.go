@@ -82,9 +82,8 @@ func RunServer(db *gorm.DB, r *gin.Engine) {
 
 	orders := api.Group("/order", middleware.Authentication())
 	orders.GET("/myOrder/:id", apiHandler.orderHandler.GetOrderByID)
-	orders.GET("/myOrder/item/:id", apiHandler.orderHandler.GetOrderItemByID)
 	orders.GET("/myOrder/history")
 	orders.POST("/product", apiHandler.orderHandler.AddOrderItem)
-	orders.POST("/payment") //add payment
-	orders.PUT("/update")   // Update Order
+	orders.POST("/payment")                                    //add payment
+	orders.PUT("/update", apiHandler.orderHandler.UpdateOrder) // Update Order
 }

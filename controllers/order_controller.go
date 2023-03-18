@@ -12,7 +12,7 @@ import (
 type OrderHandler interface {
 	GetOrderByID(c *gin.Context)
 	AddOrderItem(c *gin.Context)
-	GetOrderItemByID(c *gin.Context)
+	UpdateOrder(c *gin.Context)
 }
 
 type orderHandler struct {
@@ -58,6 +58,7 @@ func (oh *orderHandler) GetOrderByID(c *gin.Context) {
 		"data":    order,
 	})
 }
+
 func (oh *orderHandler) AddOrderItem(c *gin.Context) {
 	var ctx = c.Request.Context()
 	var id, _ = c.Get("userID")
@@ -86,18 +87,13 @@ func (oh *orderHandler) AddOrderItem(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"order_detail": result,
 	})
-	// check orderDetail already created or not
-	// if not create run create order first
-
-	// if orderDetail found, append orderitem
-
 }
 
-func (oh *orderHandler) GetOrderItemByID(c *gin.Context) {
+func (oh *orderHandler) UpdateOrder(c *gin.Context) {
 	var ctx = c.Request.Context()
-	orderItem := models.OrderItem{}
+	updateItem := models.UpdateItem{}
 
-	err := c.ShouldBindJSON(&orderItem)
+	err := c.ShouldBindJSON(&updateItem)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"status":  http.StatusBadRequest,
@@ -106,7 +102,7 @@ func (oh *orderHandler) GetOrderItemByID(c *gin.Context) {
 		return
 	}
 
-	result, err := oh.orderService.GetOrderItemByID(ctx, orderItem)
+	err = oh.orderService.UpdateOrder(ctx, updateItem)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status": http.StatusInternalServerError,
@@ -116,9 +112,9 @@ func (oh *orderHandler) GetOrderItemByID(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"order_item": result,
+		"status":  http.StatusOK,
+		"message": "update success",
 	})
 }
 
-// func (oh *orderHandler) UpdateOrder(c *gin.Context)
 // func (oh *orderHandler) ConfirmOrder(c *gin.Context)
