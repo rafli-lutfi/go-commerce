@@ -81,9 +81,10 @@ func RunServer(db *gorm.DB, r *gin.Engine) {
 	protectedUser.PUT("/profile/updateAddress", apiHandler.userHandler.UpdateAddress) //update user
 
 	orders := api.Group("/order", middleware.Authentication())
+	orders.GET("/myOrder", apiHandler.orderHandler.ActiveOrder)
 	orders.GET("/myOrder/:id", apiHandler.orderHandler.GetOrderByID)
-	orders.GET("/myOrder/history")
+	orders.GET("/myOrder/history", apiHandler.orderHandler.OrderHistory)
 	orders.POST("/product", apiHandler.orderHandler.AddOrderItem)
-	orders.POST("/payment")                                    //add payment
-	orders.PUT("/update", apiHandler.orderHandler.UpdateOrder) // Update Order
+	orders.POST("/payment/confirm", apiHandler.orderHandler.ConfirmOrder) //add payment
+	orders.PUT("/update", apiHandler.orderHandler.UpdateOrder)            // Update Order
 }

@@ -13,6 +13,9 @@ type OrderHandler interface {
 	GetOrderByID(c *gin.Context)
 	AddOrderItem(c *gin.Context)
 	UpdateOrder(c *gin.Context)
+	ConfirmOrder(c *gin.Context)
+	OrderHistory(c *gin.Context)
+	ActiveOrder(c *gin.Context)
 }
 
 type orderHandler struct {
@@ -117,4 +120,81 @@ func (oh *orderHandler) UpdateOrder(c *gin.Context) {
 	})
 }
 
-// func (oh *orderHandler) ConfirmOrder(c *gin.Context)
+func (oh *orderHandler) ConfirmOrder(c *gin.Context) {
+	var ctx = c.Request.Context()
+	var payment = models.Payment{}
+
+	err := c.ShouldBindJSON(&payment)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  http.StatusBadRequest,
+			"message": "something wrong with the body request",
+		})
+		return
+	}
+
+	if payment.ID == 0 || payment.Amount == 0 || payment.Name == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status": http.StatusBadRequest,
+			"error":  "payment amount or name is empty",
+		})
+		return
+	}
+
+	order, err := oh.orderService.ConfirmPayment(ctx, payment)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status": http.StatusInternalServerError,
+			"error":  err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  http.StatusOK,
+		"message": "payment success",
+		"data":    order,
+	})
+}
+
+func (oh *orderHandler) OrderHistory(c *gin.Context) {
+	var ctx = c.Request.Context()
+	var id, _ = c.Get("userID")
+	userIDInt := id.(int)
+
+	orders, err := oh.orderService.OrderHistory(ctx, userIDInt)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status": http.StatusInternalServerError,
+			"error":  err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  http.StatusOK,
+		"message": "success get orders",
+		"data":    orders,
+	})
+}
+
+func (oh *orderHandler) ActiveOrder(c *gin.Context) {
+	var ctx = c.Request.Context()
+	var id, _ = c.Get("userID")
+	userIDInt := id.(int)
+
+	order, err := oh.orderService.CurrentOrder(ctx, userIDInt)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status": http.StatusInternalServerError,
+			"error":  err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  http.StatusOK,
+		"message": "success get order",
+		"data":    order,
+	})
+}
